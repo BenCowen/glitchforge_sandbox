@@ -16,6 +16,9 @@ async function run() {
   const txn_hash = "ooY6b3EDUB6zprbAiSByj3MFbgkLvSlVz8GSxLC4a1Szwzf12Mw";
   const sketchCount = 1;
 
+  // bunloaf added 05/26:
+  let assetPath = "./assets";
+  let files = [];
 
   let assetFolders = files.filter(f => fs.lstatSync(assetPath + f).isDirectory() && !f.startsWith('.'));
   let raw_asset_folders = []
