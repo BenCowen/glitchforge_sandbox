@@ -1,6 +1,7 @@
 import { getRandomImageName } from "./util.js";
 import { calculateRoyalties } from "./royalties.js";
 import { sliceFrame, init as eInit } from "./effects/tartaria.js";
+import { BismuthCrystal } from "./effects/bismuthDruse.js";
 
 var r; //assign random hash accees
 var WIDTH; var HEIGHT;
@@ -92,6 +93,28 @@ export async function draw(sketch, assets) {
     /***********IMAGE MANIPULATION GOES HERE**********/
     sketch.background(0, 0, 0)
     sliceFrame(WIDTH, .05, sketch, referenceGraphic, {}, royalty_tally);
+    
+    // Crystal config:
+    let row       = 200;
+    let col       = 200;
+    let patchWidth = 200;
+    let patchHeight = 200;
+    let direction = [0,1];
+    let growProb  = 1;
+    let splitProb = 0 ;
+    let overlap   = 0.2;
+    let showEdge  = true;
+    let filler = image;
+    referenceGraphic.copy(filler, row, col, patchWidth, patchHeight, 0, 0, patchWidth, patchHeight);
+    // // Create the crystal
+    let crystal = BismuthCrystal(row, col, filler, direction, growProb, splitProb, overlap, showEdge)
+    // // Grow it a bit...
+    let n_steps = 100
+    for (let step = 0; step < n_steps; step++){
+        canvas = crystal.draw(canvas, -1)
+    }
+    //----------------------
+
     /***********IMAGE MANIPULATION ENDS HERE**********/
 
 
