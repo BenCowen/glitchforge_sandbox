@@ -1,0 +1,12 @@
+[I.] get simplistic crystal demo working with p5js, jnordberg
+https://p5js.org/reference/ 
+https://github.com/jnordberg/gif.js/
+
+[II.] build out Druse:
+    0) resize mother canvas
+    1) import and resize all auxiliary data [should probably pre-compute the resizing?]
+    2) Druse configuration load file
+    3) Upgrade druse grower 
+    4) Write to frames
+    5) Optimize: write on the fly without computing entire crystal growth?
+    -1) search files for TODO

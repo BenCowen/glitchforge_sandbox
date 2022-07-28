@@ -77,24 +77,24 @@ export async function draw(sketch, assets) {
   console.log("---Processing Starting---");
   sketch.createCanvas(WIDTH, HEIGHT);
   try {
-    /*
-     Make a copy of the raw image for reference. 
-     If the raw image is too large, a random section is chosen to match our fixed canvas size.
-    */
+    // (1.0) Import Data
+    // (1.a) Import the primary canvas /mother image. 
     let referenceGraphic = sketch.createGraphics(WIDTH, HEIGHT);
     let image = assets["main_image"]
+    // (1.b) Resize to fixed canvas [TODO]
     const copyStartX = Math.floor(random() * (image.width - WIDTH));
     const copyStartY = Math.floor(random() * (image.height - HEIGHT));
     referenceGraphic.copy(image, copyStartX, copyStartY, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT);
-
-    /* Copy the Reference image to the main Sketch for manipulation */
+    // Copy the Reference image to the main Sketch for manipulation
+    // TODO: don't maintain original?
     sketch.image(referenceGraphic, 0, 0);
+    // (1.c) Load in auxiliary images [TODO]
 
-    /***********IMAGE MANIPULATION GOES HERE**********/
+    // (2.0) Bismuth Effect
     sketch.background(0, 0, 0)
     sliceFrame(WIDTH, .05, sketch, referenceGraphic, {}, royalty_tally);
     
-    // Crystal config:
+    // (2.a) Import base crystal configuration [TODO]
     let row       = 200;
     let col       = 200;
     let patchWidth = 200;
@@ -106,14 +106,15 @@ export async function draw(sketch, assets) {
     let showEdge  = true;
     let filler = image;
     referenceGraphic.copy(filler, row, col, patchWidth, patchHeight, 0, 0, patchWidth, patchHeight);
-    // // Create the crystal
+    // Create the first crystal [TODO upgrade to Druse]
     let crystal = BismuthCrystal(row, col, filler, direction, growProb, splitProb, overlap, showEdge)
-    // // Grow it a bit...
+    // Let it grow for the duration of the GIF [TODO upgrade to Druse]
     let n_steps = 100
     for (let step = 0; step < n_steps; step++){
         canvas = crystal.draw(canvas, -1)
     }
-    //----------------------
+    // Write to GIF frames [TODO]
+    
 
     /***********IMAGE MANIPULATION ENDS HERE**********/
 
