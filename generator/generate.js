@@ -80,40 +80,44 @@ export async function draw(sketch, assets) {
     // (1.0) Import Data
     // (1.a) Import the primary canvas /mother image. 
     let referenceGraphic = sketch.createGraphics(WIDTH, HEIGHT);
-    let image = assets["main_image"]
+    let canvas = assets["main_image"]
     // (1.b) Resize to fixed canvas [TODO]
-    const copyStartX = Math.floor(random() * (image.width - WIDTH));
-    const copyStartY = Math.floor(random() * (image.height - HEIGHT));
-    referenceGraphic.copy(image, copyStartX, copyStartY, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT);
+    const copyStartX = Math.floor(random() * (canvas.width - WIDTH));
+    const copyStartY = Math.floor(random() * (canvas.height - HEIGHT));
+    referenceGraphic.copy(canvas, copyStartX, copyStartY, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT);
     // Copy the Reference image to the main Sketch for manipulation
     // TODO: don't maintain original?
     sketch.image(referenceGraphic, 0, 0);
     // (1.c) Load in auxiliary images [TODO]
 
     // (2.0) Bismuth Effect
-    sketch.background(0, 0, 0)
-    sliceFrame(WIDTH, .05, sketch, referenceGraphic, {}, royalty_tally);
+    //sketch.background(0, 0, 0)
+    //sliceFrame(WIDTH, .05, sketch, referenceGraphic, {}, royalty_tally);
     
     // (2.a) Import base crystal configuration [TODO]
-    let row       = 200;
-    let col       = 200;
-    let patchWidth = 200;
+    let row         = 200;
+    let col         = 200;
+    let patchWidth  = 200;
     let patchHeight = 200;
     let direction = [0,1];
     let growProb  = 1;
     let splitProb = 0 ;
     let overlap   = 0.2;
     let showEdge  = true;
-    let filler = image;
+    let filler = canvas;
     referenceGraphic.copy(filler, row, col, patchWidth, patchHeight, 0, 0, patchWidth, patchHeight);
     // Create the first crystal [TODO upgrade to Druse]
-    let crystal = BismuthCrystal(row, col, filler, direction, growProb, splitProb, overlap, showEdge)
+    let crystal = new BismuthCrystal(row, col, filler, direction, growProb, splitProb, overlap, showEdge)
     // Let it grow for the duration of the GIF [TODO upgrade to Druse]
     let n_steps = 100
     for (let step = 0; step < n_steps; step++){
-        canvas = crystal.draw(canvas, -1)
+      crystal.grow()
     }
+
     // Write to GIF frames [TODO]
+    for (let step = 0; step < n_steps; step++){
+      crystal.draw(sketch, step)
+    }
     
 
     /***********IMAGE MANIPULATION ENDS HERE**********/
