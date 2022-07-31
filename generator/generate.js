@@ -95,28 +95,38 @@ export async function draw(sketch, assets) {
     //sliceFrame(WIDTH, .05, sketch, referenceGraphic, {}, royalty_tally);
     
     // (2.a) Import base crystal configuration [TODO]
-    let row         = 200;
-    let col         = 200;
-    let patchWidth  = 200;
-    let patchHeight = 200;
-    let direction = [0,1];
+    let verbose      = true
+    let row          = 200;
+    let col          = 200;
+    let fillerWidth  = 200;
+    let fillerHeight = 200;
+    let direction = new Array(0.707106781, -0.707106781);
     let growProb  = 1;
     let splitProb = 0 ;
     let overlap   = 0.2;
     let showEdge  = true;
-    let filler = canvas;
-    referenceGraphic.copy(filler, row, col, patchWidth, patchHeight, 0, 0, patchWidth, patchHeight);
+    let filler = sketch.createGraphics(fillerHeight, fillerWidth);
+    filler.copy(referenceGraphic, row, col, fillerWidth, fillerHeight, 0, 0,fillerWidth, fillerHeight);
     // Create the first crystal [TODO upgrade to Druse]
-    let crystal = new BismuthCrystal(row, col, filler, direction, growProb, splitProb, overlap, showEdge)
+    let crystal = new BismuthCrystal(row, col, filler, direction, growProb, splitProb, overlap, showEdge);
+    console.log("_______________")
     // Let it grow for the duration of the GIF [TODO upgrade to Druse]
-    let n_steps = 100
-    for (let step = 0; step < n_steps; step++){
-      crystal.grow()
-    }
+    let n_steps = 50;
+    if (verbose)
+      console.log(crystal.posHist[0])
+      console.log(crystal.growProb)
+      console.log("Starting to grow for " + n_steps + " steps...")
 
+    for (let step = 0; step < n_steps; step++){
+      crystal.grow();
+      console.log(crystal.posHist)
+      console.log("_______________")
+    }
     // Write to GIF frames [TODO]
     for (let step = 0; step < n_steps; step++){
-      crystal.draw(sketch, step)
+      sketch = crystal.draw(sketch, step);
+      if (verbose)
+        console.log("step = "+step)
     }
     
 
