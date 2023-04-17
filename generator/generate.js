@@ -94,9 +94,8 @@ export async function draw(sketch, assets) {
   HEIGHT = 640;
   // Effect hyperparameters
   const verbose = true;      // how much to print
-  const n_gif_frames = 100;
-  const first_frame = 10;   // which frame of the simulation to start putting in the gif
-  const last_frame = 30     // last frame of the simulation to put in the gif
+  const first_frame = 15;   // which frame of the simulation to start putting in the gif
+  const last_frame = 25     // last frame of the simulation to put in the gif
   const configCode = 1;      // pre-configured setup ID
   const gif_repeat = 0;      // 0 for repeat, -1 for no-repeat
   const gif_frameDelay = 10;// frame delay in ms
@@ -122,7 +121,7 @@ export async function draw(sketch, assets) {
     // (1) Setup crystal effects
     let nFiller = Object.keys(assets).length - 1;
     let druse = bismuthWrapper(configCode, nFiller, HEIGHT, WIDTH, 
-                           n_gif_frames);
+      last_frame);
     let stamp = new Stamper(assets)
 
     if (verbose)
@@ -132,18 +131,26 @@ export async function draw(sketch, assets) {
     var frameData = sketch.createGraphics(WIDTH, HEIGHT);
     frameData = copyPasteImage(frameData, assets["main_image"], "random", WIDTH, HEIGHT)
     sketch.image(frameData, 0, 0);
-    gif.addFrame(sketch.canvas.getContext('2d'));
+    // gif.addFrame(sketch.canvas.getContext('2d'));
+    let frame_list = new Array()
     
     // Loop through the simulation history and draw on the canvas:
-    for (let frameIdx = 1; frameIdx < n_gif_frames; frameIdx++){
+    for (let frameIdx = 1; frameIdx < last_frame; frameIdx++){
       // Stamp effects to frame
-      frameData = stamp.stampFrame(frameData, druse, frameIdx);
+      let transient_frame = sketch.createGraphics(WIDTH, HEIGHT);
+      transient_frame = stamp.stampFrame(transient_frame, druse, frameIdx);
       // Apply frame to canvas
-      if ((frameIdx>=first_frame)&(frameIdx<=last_frame)){
-        sketch.image(frameData, 0, 0);
-        gif.addFrame(sketch.canvas.getContext('2d')); // most expensive step of all
-      }
+      frame_list.push(transient_frame);
     }
+
+    for (let frameIdx = first_frame; frameIdx < last_frame; frameIdx++){
+      sketch.image(frame_list[frameIdx], 0, 0);
+      gif.addFrame(sketch.canvas.getContext('2d')); // most expensive step of all
+      }
+    // for (let frameIdx = last_frame ; frameIdx <first_frame ; frameIdx--){
+    //   sketch.image(frame_list[frameIdx], 0, 0);
+    //   gif.addFrame(sketch.canvas.getContext('2d')); // most expensive step of all
+    //   }
     
     // finish feeding frames and create GIF
     gif.finish();
