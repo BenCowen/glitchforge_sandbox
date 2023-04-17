@@ -1,8 +1,8 @@
 import { getRandomImageName } from "./util.js";
 import { calculateRoyalties } from "./royalties.js";
 import { sliceFrame, init as eInit } from "./effects/tartaria.js";
-import {BismuthDruse} from "./effects/bismuthDruse.js";
-import {crystalConfig} from "./effects/aux_classes.js";
+import {bismuthWrapper} from "./effects/bismuthDruse.js";
+import {Stamper} from "./effects/stamper.js";
 import GIFEncoder from 'gifencoder';
 import fs from 'fs';
 import pkg from 'canvas';
@@ -24,7 +24,7 @@ export function init(rnd, txn_hash) {
 // Returns a map of assets, keyname --> filename
 export function getAssets(raw_assets) {
   let assets = [["main_image", getRandomImageName(raw_assets, 'samples')]]
-  let n_filler = 10;
+  let n_filler = 17;
   for (let f=0; f<n_filler; f++){
       assets.push(["filler"+f, getRandomImageName(raw_assets, 'samples')]);
   }
@@ -52,7 +52,7 @@ function rbtw(a, b, random) {
 
 
 function getMask(DIM) {
-  var mask = p5js.createGraphics(DIM, DIM);
+  var mask = sketch.createGraphics(DIM, DIM);
   mask.noStroke();
   mask.fill(255, 255, 255, 255);
   return mask;
@@ -64,91 +64,85 @@ function getMask(DIM) {
 function applyMask(source, target) {
   let clone;
   (clone = source.get()).mask(target.get());
-  p5js.image(clone, 0, 0);
+  sketch.image(clone, 0, 0);
 }
 
-export function returnCroppedCopy(p5js, srcData, style, outWidth, outHeight, row=0, col=0) {
-  if (style=="random"){
-    var copyStartX = Math.floor(random() * (srcData.width - outWidth));
-    var copyStartY = Math.floor(random() * (srcData.height - outHeight));
+export function copyPasteImage(page, srcData, srcCoord, 
+                    outWidth, outHeight, tgtRow=0, tgtCol=0) {
+  if (srcCoord=="random"){
+    var srcCol = Math.floor(random() * Math.max(0, (srcData.width - outWidth)));
+    var srcRow = Math.floor(random() * Math.max(0, (srcData.height - outHeight)));
+  }else{
+    var srcCol = srcCoord.col * srcData.width;
+    var srcRow = srcCoord.row * srcData.height;
   }
-  var newImg = p5js.createGraphics(outWidth, outHeight);
-  newImg.copy(srcData, copyStartX, copyStartY, outWidth, outHeight,
-                              row,        col, outWidth, outHeight)
-  return newImg
+  page.copy(srcData, srcCol, srcRow, outWidth, outHeight,
+                     tgtCol, tgtRow, outWidth, outHeight);
+  return page;
 }
 
 // Receives:
-// p5js: a p5js instance
+// sketch: a p5js instance
 // txn_hash: the transaction hash that minted this nft (faked in sandbox)
 // random: a function to replace Math.random() (based on txn_hash)
 // assets: an object with preloaded image assets from `export getAssets`, keyname --> asset
-export async function draw(p5js, assets) {
+export async function draw(sketch, assets) {
   let startmilli = Date.now();
 
   //Fixed Canvas Size, change as needed
   WIDTH = 640;
   HEIGHT = 640;
+  // Effect hyperparameters
+  const verbose = true;      // how much to print
+  const n_gif_frames = 100;
+  const first_frame = 10;   // which frame of the simulation to start putting in the gif
+  const last_frame = 30     // last frame of the simulation to put in the gif
+  const configCode = 1;      // pre-configured setup ID
+  const gif_repeat = 0;      // 0 for repeat, -1 for no-repeat
+  const gif_frameDelay = 10;// frame delay in ms
+  const gif_imgQuality = 10;
 
   let royalty_tally = {}
   //Populate the features object like so, it is automatically exported. 
   features['Trait Name'] = "Trait Value";
 
   console.log("---Processing Starting---");
-  p5js.createCanvas(WIDTH, HEIGHT);
-  var gif_ctx = createCanvas(WIDTH, HEIGHT).getContext('2d')
+  sketch.createCanvas(WIDTH, HEIGHT);
   try {
-    // (0.0) Setup GIF writer (put this in an above fcn?)
-
-    // const canvass = createCanvas(WIDTH, HEIGHT);
-    // const ctx = canvass.getContext('2d');
-    // const gif_ctx = p5js.createCanvas(WIDTH, HEIGHT).getContext('2d'); //GIF canvas...
-    let n_frames = 5;
+    /* Compute Crystal Growth Simulation For All Frames*/
+    
+    // (0) Setup GIF writer (put this in an above fcn?)
     let gif = new GIFEncoder(WIDTH, HEIGHT);
-    gif.setRepeat(0);   // 0 for repeat, -1 for no-repeat
-    gif.setDelay(10);  // frame delay in ms
-    gif.setQuality(1); // image quality. 10 is default.
-    // later, this gets set above...
-    const output_file = fs.createWriteStream('animation1.gif');
-    gif.createWriteStream().pipe(output_file);
+    gif.createReadStream().pipe(fs.createWriteStream('_demo_animation.gif'));
     gif.start();
-    let verbose = true 
-    // (1.0) Import Data to desired size
-    let canvas = returnCroppedCopy(p5js, assets["main_image"], "random", WIDTH, HEIGHT)
-    // Copy the Reference image to the main p5js for manipulation
-    p5js.image(canvas, 0, 0);
-    
-    // (2) Setup crystal effects
-    let config_code = 0
-    let baseConfig = new crystalConfig().getCommonConfig(config_code)
-    // Crystal children will behave differently:
-    let splitConfig = new crystalConfig().getCommonConfig(config_code)
-    splitConfig.splitProb = 0.1
-    splitConfig.patchSizeFactor = 0.25
+    gif.setRepeat(gif_repeat);   
+    gif.setDelay(gif_frameDelay);  
+    gif.setQuality(gif_imgQuality); 
 
-    // (3) Set up secondary sources (filler imagery)
-    let druse  = new BismuthDruse(p5js, baseConfig, splitConfig, assets)
-    console.log("_______________")
-    
-    
-    if (verbose)
-      console.log("Starting to grow for " + n_frames + " steps...")
-
-    /*Grow in a separate loop from writing cuz there's non-causal effects*/
-    for (let step = 0; step < n_frames; step++){
-      console.log('ncrystal = '+druse.len())
-      druse.growCrystals();
-    }
+    // (1) Setup crystal effects
+    let nFiller = Object.keys(assets).length - 1;
+    let druse = bismuthWrapper(configCode, nFiller, HEIGHT, WIDTH, 
+                           n_gif_frames);
+    let stamp = new Stamper(assets)
 
     if (verbose)
       console.log("writing to gif now...")
-    let image_url, image_data;
-    for (let step = 0; step < n_frames; step++){
-      druse.drawCrystals(step);
-      image_url = druse.p5.getCanvasDataURL(druse.p5);
-      image_data = await loadImage(image_url);
-      gif_ctx.drawImage(image_data, 0, 0);
-      gif.addFrame(gif_ctx); // this step takes forever!
+    
+    // Copy the Reference image to the main sketch (frame 0)
+    var frameData = sketch.createGraphics(WIDTH, HEIGHT);
+    frameData = copyPasteImage(frameData, assets["main_image"], "random", WIDTH, HEIGHT)
+    sketch.image(frameData, 0, 0);
+    gif.addFrame(sketch.canvas.getContext('2d'));
+    
+    // Loop through the simulation history and draw on the canvas:
+    for (let frameIdx = 1; frameIdx < n_gif_frames; frameIdx++){
+      // Stamp effects to frame
+      frameData = stamp.stampFrame(frameData, druse, frameIdx);
+      // Apply frame to canvas
+      if ((frameIdx>=first_frame)&(frameIdx<=last_frame)){
+        sketch.image(frameData, 0, 0);
+        gif.addFrame(sketch.canvas.getContext('2d')); // most expensive step of all
+      }
     }
     
     // finish feeding frames and create GIF
@@ -166,7 +160,8 @@ export async function draw(p5js, assets) {
 
 
     //Saves the image for test review: Remove from production
-    p5js.saveCanvas(p5js, "" + Math.floor(Math.random() * 10000), 'png');
+    // sketch.saveCanvas(sketch, "" + Math.floor(Math.random() * 10000), 'png');
+    sketch.saveCanvas(sketch, "_demo_image.png");
 
     //Times how long the image takes to run
     console.log("---Processing Complete---")
@@ -175,7 +170,7 @@ export async function draw(p5js, assets) {
       "decimals": 3,
     }
     calculateRoyalties(royalties, royalty_tally)
-    return p5js.getCanvasDataURL(p5js);
+    return sketch.getCanvasDataURL(sketch);
   } catch (e) {
     console.error(e);
   }
