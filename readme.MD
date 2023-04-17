@@ -1,3 +1,11 @@
+
+
+<table align='center'>
+<tr>
+<td><img src="./generator/effects/config1_example.gif" width="375" height="375"/></td>
+</tr>
+
+
 ## Getting Started
 
 Artists, you can fork this repo, or create your own branch in this repo. If you plan on contributing your glitch effects to the permanent library, it may be easier to create a branch in this repo... 
