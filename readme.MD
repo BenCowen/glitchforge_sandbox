@@ -1,9 +1,8 @@
 
 
-<table align='center'>
-<tr>
-<td><img src="./generator/effects/config1_example.gif" width="375" height="375"/></td>
-</tr>
+## My WIP: bismuth crystal simulation
+
+![Config Example](./generator/effects/config1_example.gif)
 
 
 ## Getting Started
