@@ -1,9 +1,10 @@
 
-
+## WIP for GlitchForge
 <table align='center'>
 <tr>
 <td><img src="./generator/effects/config1_example.gif" width="375" height="375"/></td>
 </tr>
+</table>
 
 
 ## Getting Started
